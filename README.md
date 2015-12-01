@@ -15,16 +15,3 @@ Hosting the code and environment settings for the 2015 Baltimore City Public Sch
 * click "Create workspace"
 * go back to your dashboard by clicking the cloud icon in the upper right
 * re open your workspace
-
-
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact

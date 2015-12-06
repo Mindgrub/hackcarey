@@ -8,7 +8,7 @@
     "build": {
         "@builder": "auto",
         "@path": "/.c9/builders",
-        "@saveall": "true"
+        "@saveall": true
     },
     "find.nak": {
         "@searchLimit": 100
@@ -29,11 +29,11 @@
         "configs": {
             "@inited": "true",
             "json()": {
-                "run": {
+                "bcps": {
                     "command": "index.html",
                     "debug": true,
                     "default": true,
-                    "name": "run",
+                    "name": "bcps",
                     "runner": "Apache httpd (PHP, HTML)"
                 }
             }

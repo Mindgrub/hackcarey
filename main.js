@@ -19,7 +19,7 @@ var mainState = {
         game.physics.startSystem(Phaser.Physics.ARCADE);
 
         //Display Mario on the screen
-        this.mario = this.game.add.sprite(100,300,'marioStand');
+        this.mario = this.game.add.sprite(100,320,'marioStand');
 
         //Add gravity to Mario to make him fall
         game.physics.arcade.enable(this.mario);

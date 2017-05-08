@@ -6,12 +6,13 @@ var mainState = {
 
     preload: function() {
         //Change the background color to something more sky-like
-        game.stage.backgroundColor = "#6495ED"
+        game.stage.backgroundColor = "#6495ED";
 
         //Load the game sprites
         game.load.image('marioStand', 'assets/marioStand.png');
         game.load.image('marioRun1', 'assets/marioRun1.png');
         game.load.image('marioRun2', 'assets/marioRun2.png');
+        game.load.image('brick', 'assets/brick.png');
     },
 
     create: function() {
@@ -26,8 +27,18 @@ var mainState = {
         this.mario.body.gravity.y = 1776;
 
         //Call the 'jump' function when the space bar is hit
-        var spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-        spaceKey.onDown.add(this.jump, this);
+        this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+        this.spaceKey.onDown.add(this.jump, this);
+
+        //Create a new TileSprite that can hold the bricks for Mario to stand on
+        this.brickTile = this.game.add.tileSprite(0,500-40,800,500-(320+44),'brick');
+        //Adds physics to brickTile
+        game.physics.arcade.enable(this.brickTile);
+        //Makes sure that Mario can never move the ground
+        this.brickTile.body.immovable = true;
+
+        //Create a variable to see whether Mario is on the ground
+        this.isOnGround = false;
     },
 
     update: function() {
@@ -36,19 +47,31 @@ var mainState = {
         if(this.mario.inWorld == false) {
             this.restartGame();
         }
+
+        //If mario collides with the brickTile, he will stop falling
+        //This will also set 'isOnGround' to true
+        game.physics.arcade.collide(this.mario, this.brickTile, this.marioIsOnGround);
+
+    },
+
+    marioIsOnGround: function() {
+        game.isOnGround = true;
     },
 
     jump: function() {
-        //Give Mario a vertical velocity
-        this.mario.body.velocity.y = -600;
+        //Give Mario a vertical velocity if isOnGround == true
+        console.log(this.isOnGround);
+        if (game.isOnGround) {
+            this.mario.body.velocity.y = -600;
+            game.isOnGround = false;
+        }
     },
-
     restartGame: function() {
         //Starts the 'main' state, which returns to the game
         game.state.start('main');
     }
 };
 
-// Add and start the 'main' state to start the game
+// AAdd and start the 'main' state to start the game
 game.state.add('main', mainState);
 game.state.start('main');

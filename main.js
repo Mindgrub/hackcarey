@@ -9,9 +9,7 @@ var mainState = {
         game.stage.backgroundColor = "#6495ED";
 
         //Load the game sprites
-        game.load.image('marioStand', 'assets/marioStand.png');
-        game.load.image('marioRun1', 'assets/marioRun1.png');
-        game.load.image('marioRun2', 'assets/marioRun2.png');
+        game.load.spritesheet('mario', 'assets/marioSpriteSheet.png', 51, 51);
         game.load.image('brick', 'assets/brick.png');
     },
 
@@ -20,15 +18,31 @@ var mainState = {
         game.physics.startSystem(Phaser.Physics.ARCADE);
 
         //Display Mario on the screen
-        this.mario = this.game.add.sprite(100,320,'marioStand');
+        this.mario = this.game.add.sprite(100,320,'mario');
+        //Sets mario's sprite frame to the 0th one
+        this.mario.frame = 0;
+
+        //Creates an animation for mario using the first, second, and third frames at 10fps
+        //true turns looping on
+        this.mario.animations.add('moving', [1,2,3], 15, true);
+        this.mario.animations.add('jumping', [4], 10, true);
+
+        //Makes sure Mario flips around his x-axis
+        this.mario.anchor.setTo(0.5, 1);
 
         //Add gravity to Mario to make him fall
         game.physics.arcade.enable(this.mario);
-        this.mario.body.gravity.y = 1776;
+        this.mario.body.gravity.y = 2500;
 
         //Call the 'jump' function when the space bar is hit
         this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
         this.spaceKey.onDown.add(this.jump, this);
+
+        //Adds the left key to the program
+        this.leftKey = this.game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+
+        //Adds the right key to the program
+        this.rightKey = this.game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
 
         //Create a new TileSprite that can hold the bricks for Mario to stand on
         this.brickTile = this.game.add.tileSprite(0,500-40,800,500-(320+44),'brick');
@@ -48,10 +62,72 @@ var mainState = {
             this.restartGame();
         }
 
+        if (game.isOnGround && Math.abs(this.mario.body.velocity.x) > 0){
+            this.mario.animations.play('moving')
+        }
+
+
+        //If neither keys are pressed
+        if(this.leftKey.isUp && this.rightKey.isUp) {
+
+            this.mario.body.gravity.x = 0; //This keeps mario from speeding up in the air
+
+            if (this.mario.body.velocity.x < 5 && this.mario.body.velocity.x > -5) {
+                //Makes mario stand if moving very slowly
+                this.mario.body.velocity.x = 0;
+
+                //Makes mario stand if not moving on the ground
+                if (game.isOnGround) {
+                    this.mario.animations.stop();
+                    this.mario.frame = 0;
+                }
+            }
+
+            //Mario will slow down to a stop, but only if on the ground
+            if (game.isOnGround){
+                if (this.mario.body.velocity.x > 0) {
+                    this.mario.body.gravity.x = -400;
+                }
+                else if (this.mario.body.velocity.x < 0) {
+                    this.mario.body.gravity.x = 400;
+                }
+                else {
+                    this.mario.body.gravity.x = 0;
+                }
+            }
+        }
+
+        //If the a key is pressed, mario accelerates until he reaches full speed
+        else if(this.leftKey.isDown && this.rightKey.isUp){
+
+            //Makes mario face to the left
+            this.mario.scale.x = -1;
+
+            if (this.mario.body.velocity.x > -200) {
+                this.mario.body.gravity.x = -500;
+            }
+            else {
+                this.mario.body.gravity.x = 0;
+            }
+
+        }
+        else if(this.leftKey.isUp && this.rightKey.isDown){
+
+            //Makes mario face to the right
+            this.mario.scale.x = 1;
+
+            if (this.mario.body.velocity.x < 200) {
+                this.mario.body.gravity.x = 500;
+            }
+            else {
+                this.mario.body.gravity.x = 0;
+            }
+
+        }
+
         //If mario collides with the brickTile, he will stop falling
         //This will also set 'isOnGround' to true
         game.physics.arcade.collide(this.mario, this.brickTile, this.marioIsOnGround);
-
     },
 
     marioIsOnGround: function() {
@@ -60,12 +136,16 @@ var mainState = {
 
     jump: function() {
         //Give Mario a vertical velocity if isOnGround == true
-        console.log(this.isOnGround);
         if (game.isOnGround) {
-            this.mario.body.velocity.y = -600;
+            this.mario.body.velocity.y = -900;
+            //No longer on the ground
             game.isOnGround = false;
+            //Set mario's frame to jumping
+            this.mario.animations.stop();
+            this.mario.frame = 4;
         }
     },
+
     restartGame: function() {
         //Starts the 'main' state, which returns to the game
         game.state.start('main');

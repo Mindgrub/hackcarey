@@ -34,11 +34,11 @@ var mainState = {
         this.mario.body.gravity.y = 2500;
 
         //Create a new TileSprite that can hold the bricks for Mario to stand on
-        this.brickTile = this.game.add.tileSprite(0,500-40,800,500-(320+44),'brick');
-        //Adds physics to brickTile
-        game.physics.arcade.enable(this.brickTile);
-        //Makes sure that Mario can never move the ground
-        this.brickTile.body.immovable = true;
+
+        //Creates block for mario to jump on
+        this.blocks = game.add.group(); //Creates a group
+        this.blocks.enableBody = true; //Adds physics to the group
+        this.blocks.createMultiple(21, 'brick'); //Creates 21 blocks
 
         //Call the 'jump' function when the space bar is hit
         this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
@@ -52,39 +52,64 @@ var mainState = {
 
         //Create a variable to see whether Mario is on the ground
         this.isOnGround = false;
+
+        //Adds the two starting platforms
+        this.addPlatform(0, 500-34);
+        this.addPlatform(34*3, 500-34);
+
+
+        //Creates 5 starting blocks
+        for (var i = 0; i < 5; i++) {
+            this.addPlatformToGame();
+        }
     },
 
     update: function() {
-        //If Mario goes out of the frame, the game will restart
 
-        if(this.mario.inWorld == false) {
+        //If Mario falls, the game will restart
+        if(this.mario.y >= 500) {
             this.restartGame();
         }
 
         //If neither keys are pressed
         if(this.leftKey.isUp && this.rightKey.isUp || (this.leftKey.isDown && this.rightKey.isDown)) {
 
-            if(game.isOnGround) {
-                this.brickTile.stopScroll();
-                this.mario.frame = 0;
+
+            //Stops all blocks from moving
+            for (var i = 0; i < this.blocks.children.length; i++){
+                this.blocks.children[i].body.velocity.x = 0;
             }
 
+            //Stops mario from moving
             this.mario.body.velocity.x = 0;
+
+            //Sets mario's frame to the one where he stands
+            if(game.isOnGround) {
+                this.mario.frame = 0;
+            }
         }
 
-        //If the a key is pressed, starts running
+
+        //If the a key is pressed, mario starts running
 
         //Left key
         else if(this.leftKey.isDown && this.rightKey.isUp){
 
-            //Makes the ground scroll
-            this.brickTile.stopScroll();
+            //Stops all blocks from moving
+            for (var i = 0; i < this.blocks.children.length; i++){
+                this.blocks.children[i].body.velocity.x = 0;
+            }
 
             //Makes mario face to the left
             this.mario.scale.x = -1;
 
             //Gives mario his leftward speed
             this.mario.body.velocity.x = -200;
+
+            //Prevents mario from going off screen to the left
+            if(this.mario.x < 21){
+                this.mario.body.velocity.x = 0;
+            }
 
             //Plays the moving animation if moving and on ground
             if (game.isOnGround) {
@@ -93,7 +118,7 @@ var mainState = {
         }
 
         //Right key
-        else if(this.leftKey.isUp && this.rightKey.isDown){
+        else if(this.rightKey.isDown && this.leftKey.isUp){
 
             //Makes mario face to the right
             this.mario.scale.x = 1;
@@ -103,9 +128,17 @@ var mainState = {
 
 
             //If mario reaches a certain point, he stops and the floor scrolls
-            if (this.mario.x > 250){
+            //All game movement code will go here
+
+            if (this.mario.x >= 250){
+
                 this.mario.body.velocity.x = 0;
-                this.brickTile.autoScroll(-150,0);
+
+                //Makes all the blocks move to the left
+                for (var i = 0; i < this.blocks.children.length; i++){
+                    this.blocks.children[i].body.velocity.x = -175;
+                }
+
             }
 
             //Plays the moving animation if moving and on ground
@@ -114,9 +147,13 @@ var mainState = {
             }
         }
 
-        //If mario collides with the brickTile, he will stop falling
+        this.killBlocksOffFrame();
+
+        this.addNewPlatforms();
+
+        //If mario collides with the any member of the 'blocks' group, he will stop falling
         //This will also set 'isOnGround' to true
-        game.physics.arcade.collide(this.mario, this.brickTile, this.marioIsOnGround);
+        game.physics.arcade.collide(this.mario, this.blocks, this.marioIsOnGround);
     },
 
     marioIsOnGround: function() {
@@ -135,6 +172,84 @@ var mainState = {
             this.mario.animations.stop();
             this.mario.frame = 4;
         }
+    },
+
+    addBlock: function(x, y) {
+        //Get the first dead block in our group
+        var block = this.blocks.getFirstDead();
+
+        //Set the new position of the block
+        block.reset(x, y);
+
+        //Makes sure mario can't push blocks around
+        block.body.immovable = true;
+
+    },
+
+    //Adds three blocks in a row
+    addPlatform: function(x, y) {
+        //block sprite is 34x34
+        this.addBlock(x, y);
+        this.addBlock(x+34, y);
+        this.addBlock(x+(34*2), y);
+    },
+
+    //Adds a platform at a random but jumpable height after the given hole vaule
+    addPlatformToGame: function() {
+        var yRandHeight = Math.floor(Math.random() * 500) + 1;
+
+        var holeSize = 150;
+
+        //Loop through all blocks and find the highest x value
+        var x = this.getLastAddedBlock().x;
+
+        //if yRandHeight is not jumpable, it will keep resetting it until it works
+        while (this.checkJumpable(yRandHeight) == false) {
+            yRandHeight = Math.floor(Math.random() * 500) + 1;
+        }
+
+        //Adds a new platform at the new position
+        this.addPlatform(x + holeSize, yRandHeight);
+    },
+
+    //If block goes off the screen, it will be killed
+    killBlocksOffFrame: function() {
+        for (var i = 0; i < this.blocks.children.length; i++){
+            if (this.blocks.children[i].x < -34){
+                this.blocks.children[i].kill();
+            }
+        }
+    },
+
+    //If there are three dead blocks, a new platform will be added to the game
+    addNewPlatforms: function() {
+        if (this.blocks.countDead() >= 3){
+            this.addPlatformToGame();
+        }
+    },
+
+    //Loops through all blocks, finds the one with the highest x value, and returns it
+    getLastAddedBlock: function() {
+        var x = 0;
+        var lastAddedBlock;
+        for (var i = 0; i < this.blocks.length; i++){
+            if (this.blocks.children[i].x > x){
+                x = this.blocks.children[i].x
+                lastAddedBlock = this.blocks.children[i];
+            }
+        }
+        return lastAddedBlock;
+    },
+
+    //Checks if a block with a given y value can be jumped to from the last created block
+    checkJumpable: function(y) {
+
+        var lastAdded = this.getLastAddedBlock();
+
+        if (lastAdded.y - y < 130 && y < 466)
+            return true;
+
+        return false;
     },
 
     restartGame: function() {

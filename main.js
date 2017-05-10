@@ -62,7 +62,7 @@ var mainState = {
         }
 
         if (game.isOnGround && Math.abs(this.mario.body.velocity.x) > 0){
-            this.mario.animations.play('moving')
+
         }
 
 
@@ -70,51 +70,29 @@ var mainState = {
         if(this.leftKey.isUp && this.rightKey.isUp || (this.leftKey.isDown && this.rightKey.isDown)) {
 
             this.brickTile.stopScroll();
+            this.mario.frame = 0;
 
-            this.mario.body.gravity.x = 0; //This keeps mario from speeding up in the air
-
-            if (this.mario.body.velocity.x < 5 && this.mario.body.velocity.x > -5) {
-                //Makes mario stand if moving very slowly
-                this.mario.body.velocity.x = 0;
-
-                //Makes mario stand if not moving on the ground
-                if (game.isOnGround) {
-                    this.mario.animations.stop();
-                    this.mario.frame = 0;
-                }
-            }
-
-            //Mario will slow down to a stop, but only if on the ground
-            if (game.isOnGround){
-                if (this.mario.body.velocity.x > 0) {
-                    this.mario.body.gravity.x = -400;
-                }
-                else if (this.mario.body.velocity.x < 0) {
-                    this.mario.body.gravity.x = 400;
-                }
-                else {
-                    this.mario.body.gravity.x = 0;
-                }
-            }
+            this.mario.body.velocity.x = 0;
         }
 
-        //If the a key is pressed, mario accelerates until he reaches full speed
+        //If the a key is pressed, starts running
 
         //Left key
         else if(this.leftKey.isDown && this.rightKey.isUp){
 
+            //Makes the ground scroll
             this.brickTile.stopScroll();
 
             //Makes mario face to the left
             this.mario.scale.x = -1;
 
-            if (this.mario.body.velocity.x > -200) {
-                this.mario.body.gravity.x = -500;
-            }
-            else {
-                this.mario.body.gravity.x = 0;
-            }
+            //Gives mario his leftward speed
+            this.mario.body.velocity.x = -200;
 
+            //Plays the moving animation if moving and on ground
+            if (game.isOnGround) {
+                this.mario.animations.play('moving');
+            }
         }
 
         //Right key
@@ -123,18 +101,20 @@ var mainState = {
             //Makes mario face to the right
             this.mario.scale.x = 1;
 
-            if (this.mario.body.velocity.x < 200) {
-                this.mario.body.gravity.x = 500;
-            }
-            else {
-                this.mario.body.gravity.x = 0;
-            }
+            //Gives mario his rightward speed
+            this.mario.body.velocity.x = 200;
 
+
+            //If mario reaches a certain point, he stops and the floor scrolls
             if (this.mario.x > 250){
                 this.mario.body.velocity.x = 0;
                 this.brickTile.autoScroll(-150,0);
             }
 
+            //Plays the moving animation if moving and on ground
+            if (game.isOnGround) {
+                this.mario.animations.play('moving');
+            }
         }
 
         //If mario collides with the brickTile, he will stop falling
@@ -150,8 +130,10 @@ var mainState = {
         //Give Mario a vertical velocity if isOnGround == true
         if (game.isOnGround) {
             this.mario.body.velocity.y = -900;
+
             //No longer on the ground
             game.isOnGround = false;
+
             //Set mario's frame to jumping
             this.mario.animations.stop();
             this.mario.frame = 4;

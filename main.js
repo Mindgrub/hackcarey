@@ -25,7 +25,6 @@ var mainState = {
         //Creates an animation for mario using the first, second, and third frames at 10fps
         //true turns looping on
         this.mario.animations.add('moving', [1,2,3], 15, true);
-        this.mario.animations.add('jumping', [4], 10, true);
 
         //Makes sure Mario flips around his x-axis
         this.mario.anchor.setTo(0.5, 1);
@@ -33,6 +32,13 @@ var mainState = {
         //Add gravity to Mario to make him fall
         game.physics.arcade.enable(this.mario);
         this.mario.body.gravity.y = 2500;
+
+        //Create a new TileSprite that can hold the bricks for Mario to stand on
+        this.brickTile = this.game.add.tileSprite(0,500-40,800,500-(320+44),'brick');
+        //Adds physics to brickTile
+        game.physics.arcade.enable(this.brickTile);
+        //Makes sure that Mario can never move the ground
+        this.brickTile.body.immovable = true;
 
         //Call the 'jump' function when the space bar is hit
         this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
@@ -43,13 +49,6 @@ var mainState = {
 
         //Adds the right key to the program
         this.rightKey = this.game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
-
-        //Create a new TileSprite that can hold the bricks for Mario to stand on
-        this.brickTile = this.game.add.tileSprite(0,500-40,800,500-(320+44),'brick');
-        //Adds physics to brickTile
-        game.physics.arcade.enable(this.brickTile);
-        //Makes sure that Mario can never move the ground
-        this.brickTile.body.immovable = true;
 
         //Create a variable to see whether Mario is on the ground
         this.isOnGround = false;
@@ -68,7 +67,9 @@ var mainState = {
 
 
         //If neither keys are pressed
-        if(this.leftKey.isUp && this.rightKey.isUp) {
+        if(this.leftKey.isUp && this.rightKey.isUp || (this.leftKey.isDown && this.rightKey.isDown)) {
+
+            this.brickTile.stopScroll();
 
             this.mario.body.gravity.x = 0; //This keeps mario from speeding up in the air
 
@@ -98,7 +99,11 @@ var mainState = {
         }
 
         //If the a key is pressed, mario accelerates until he reaches full speed
+
+        //Left key
         else if(this.leftKey.isDown && this.rightKey.isUp){
+
+            this.brickTile.stopScroll();
 
             //Makes mario face to the left
             this.mario.scale.x = -1;
@@ -111,6 +116,8 @@ var mainState = {
             }
 
         }
+
+        //Right key
         else if(this.leftKey.isUp && this.rightKey.isDown){
 
             //Makes mario face to the right
@@ -121,6 +128,11 @@ var mainState = {
             }
             else {
                 this.mario.body.gravity.x = 0;
+            }
+
+            if (this.mario.x > 250){
+                this.mario.body.velocity.x = 0;
+                this.brickTile.autoScroll(-150,0);
             }
 
         }

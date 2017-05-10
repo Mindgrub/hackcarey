@@ -11,11 +11,20 @@ var mainState = {
         //Load the game sprites
         game.load.spritesheet('mario', 'assets/marioSpriteSheet.png', 51, 51);
         game.load.image('brick', 'assets/brick.png');
+        game.load.image('pipe', 'assets/pipe.png');
+        game.load.image('cloud', 'assets/cloud.png');
     },
 
     create: function() {
         //Set the physics system
         game.physics.startSystem(Phaser.Physics.ARCADE);
+
+
+        //Adds two clouds
+        this.cloud1 = game.add.sprite(570, this.randomCloudY(), 'cloud');
+        this.cloud2 = game.add.sprite(920, this.randomCloudY(), 'cloud');
+        game.physics.arcade.enable(this.cloud1);
+        game.physics.arcade.enable(this.cloud2);
 
         //Display Mario on the screen
         this.mario = this.game.add.sprite(100,320,'mario');
@@ -39,6 +48,11 @@ var mainState = {
         this.blocks = game.add.group(); //Creates a group
         this.blocks.enableBody = true; //Adds physics to the group
         this.blocks.createMultiple(21, 'brick'); //Creates 21 blocks
+
+
+        this.pipes = game.add.group();
+        this.pipes.enableBody = true;
+        this.pipes.createMultiple(21, 'pipe');
 
         //Call the 'jump' function when the space bar is hit
         this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
@@ -76,9 +90,12 @@ var mainState = {
 
 
             //Stops all blocks from moving
+            //noinspection JSDuplicatedDeclaration
             for (var i = 0; i < this.blocks.children.length; i++){
                 this.blocks.children[i].body.velocity.x = 0;
             }
+            this.cloud1.body.velocity.x = 0;
+            this.cloud2.body.velocity.x = 0;
 
             //Stops mario from moving
             this.mario.body.velocity.x = 0;
@@ -89,16 +106,18 @@ var mainState = {
             }
         }
 
-
         //If the a key is pressed, mario starts running
 
         //Left key
         else if(this.leftKey.isDown && this.rightKey.isUp){
 
             //Stops all blocks from moving
+            //noinspection JSDuplicatedDeclaration
             for (var i = 0; i < this.blocks.children.length; i++){
                 this.blocks.children[i].body.velocity.x = 0;
             }
+            this.cloud1.body.velocity.x = 0;
+            this.cloud2.body.velocity.x = 0;
 
             //Makes mario face to the left
             this.mario.scale.x = -1;
@@ -126,7 +145,6 @@ var mainState = {
             //Gives mario his rightward speed
             this.mario.body.velocity.x = 200;
 
-
             //If mario reaches a certain point, he stops and the floor scrolls
             //All game movement code will go here
 
@@ -135,9 +153,13 @@ var mainState = {
                 this.mario.body.velocity.x = 0;
 
                 //Makes all the blocks move to the left
+                //noinspection JSDuplicatedDeclaration
                 for (var i = 0; i < this.blocks.children.length; i++){
                     this.blocks.children[i].body.velocity.x = -175;
                 }
+
+                this.cloud1.body.velocity.x = -80;
+                this.cloud2.body.velocity.x = -80;
 
             }
 
@@ -151,9 +173,21 @@ var mainState = {
 
         this.addNewPlatforms();
 
+
+        if (this.cloud1.x <= -64) {
+            this.cloud1.x += 800
+            this.cloud1.y = this.randomCloudY();
+        }
+        if (this.cloud2.x <= -64) {
+            this.cloud2.x += 800
+            this.cloud2.y = this.randomCloudY();
+        }
         //If mario collides with the any member of the 'blocks' group, he will stop falling
         //This will also set 'isOnGround' to true
         game.physics.arcade.collide(this.mario, this.blocks, this.marioIsOnGround);
+
+        game.physics.arcade.collide(this.mario, this.pipes, this.marioIsOnGround);
+
     },
 
     marioIsOnGround: function() {
@@ -174,10 +208,20 @@ var mainState = {
         }
     },
 
+    addPipe: function(x, y) {
+
+        console.log(this.pipes.children[0].alive);
+        var pipe = this.pipes.getFirstDead();
+
+        pipe.reset(x, y);
+
+        pipe.body.immovable = true;
+
+    },
+
     addBlock: function(x, y) {
         //Get the first dead block in our group
         var block = this.blocks.getFirstDead();
-
         //Set the new position of the block
         block.reset(x, y);
 
@@ -192,6 +236,12 @@ var mainState = {
         this.addBlock(x, y);
         this.addBlock(x+34, y);
         this.addBlock(x+(34*2), y);
+
+        console.log(this.pipes.children[0].alive);
+        //1/5 chance of spawning a pipe
+       if (Math.floor(Math.random() * 5) === 0) {
+            this.addPipe(x+19, y-64);
+        }
     },
 
     //Adds a platform at a random but jumpable height after the given hole vaule
@@ -204,7 +254,7 @@ var mainState = {
         var x = this.getLastAddedBlock().x;
 
         //if yRandHeight is not jumpable, it will keep resetting it until it works
-        while (this.checkJumpable(yRandHeight) == false) {
+        while (this.checkJumpable(yRandHeight) === false) {
             yRandHeight = Math.floor(Math.random() * 500) + 1;
         }
 
@@ -234,7 +284,7 @@ var mainState = {
         var lastAddedBlock;
         for (var i = 0; i < this.blocks.length; i++){
             if (this.blocks.children[i].x > x){
-                x = this.blocks.children[i].x
+                x = this.blocks.children[i].x;
                 lastAddedBlock = this.blocks.children[i];
             }
         }
@@ -250,6 +300,10 @@ var mainState = {
             return true;
 
         return false;
+    },
+
+    randomCloudY: function() {
+        return Math.floor(Math.random() * 310);
     },
 
     restartGame: function() {

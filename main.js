@@ -61,16 +61,13 @@ var mainState = {
             this.restartGame();
         }
 
-        if (game.isOnGround && Math.abs(this.mario.body.velocity.x) > 0){
-
-        }
-
-
         //If neither keys are pressed
         if(this.leftKey.isUp && this.rightKey.isUp || (this.leftKey.isDown && this.rightKey.isDown)) {
 
-            this.brickTile.stopScroll();
-            this.mario.frame = 0;
+            if(game.isOnGround) {
+                this.brickTile.stopScroll();
+                this.mario.frame = 0;
+            }
 
             this.mario.body.velocity.x = 0;
         }

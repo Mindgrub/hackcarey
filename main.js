@@ -162,7 +162,7 @@ var mainState = {
 
     jump: function() {
         //Give Mario a vertical velocity if isOnGround == true
-        if (game.isOnGround) {
+        if (game.isOnGround && this.mario.body.velocity.y == 0) {
             this.mario.body.velocity.y = -900;
 
             //No longer on the ground

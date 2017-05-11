@@ -297,7 +297,7 @@ var mainState = {
             if (this.blocks.children[i].x < -34){
                 this.blocks.children[i].kill();
             }
-            if (this.pipes.children[i].x < -50){
+            if (this.pipes.children[i].x < -64){
                 this.pipes.children[i].kill();
             }
         }

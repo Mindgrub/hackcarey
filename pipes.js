@@ -20,7 +20,7 @@ var mainState = {
         game.physics.startSystem(Phaser.Physics.ARCADE);
 
 
-        //Adds two clouds
+        //Adds two clouds, one on screen and one off screen
         this.cloud1 = game.add.sprite(570, this.randomCloudY(), 'cloud');
         this.cloud2 = game.add.sprite(920, this.randomCloudY(), 'cloud');
         game.physics.arcade.enable(this.cloud1);
@@ -44,12 +44,12 @@ var mainState = {
 
         //Create a new TileSprite that can hold the bricks for Mario to stand on
 
-        //Creates block for mario to jump on
+        //Creates blocks for mario to jump on
         this.blocks = game.add.group(); //Creates a group
         this.blocks.enableBody = true; //Adds physics to the group
         this.blocks.createMultiple(21, 'brick'); //Creates 21 blocks
 
-
+        //Creates pipes for mario to go down
         this.pipes = game.add.group();
         this.pipes.enableBody = true;
         this.pipes.createMultiple(21, 'pipe');
@@ -64,8 +64,18 @@ var mainState = {
         //Adds the right key to the program
         this.rightKey = this.game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
 
+        //Adds the down key to the program, which calls the goDownPipe method when pressed
+        this.downKey = this.game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
+        this.downKey.onDown.add(this.goDownPipe, this);
+
         //Create a variable to see whether Mario is on the ground
         this.isOnGround = false;
+
+        //Create a variable to check if mario is on a pipe
+        this.isOnPipe = false;
+
+        //Create a variable to check if mario is inside a pipe
+        game.isInPipe = false;
 
         //Adds the two starting platforms
         this.addPlatform(0, 500-34);
@@ -76,6 +86,7 @@ var mainState = {
         for (var i = 0; i < 5; i++) {
             this.addPlatformToGame();
         }
+
     },
 
     update: function() {
@@ -86,13 +97,15 @@ var mainState = {
         }
 
         //If neither keys are pressed
-        if(this.leftKey.isUp && this.rightKey.isUp || (this.leftKey.isDown && this.rightKey.isDown)) {
+        if(this.leftKey.isUp && this.rightKey.isUp || (this.leftKey.isDown && this.rightKey.isDown) || game.isInPipe) {
 
 
-            //Stops all blocks from moving
-            //noinspection JSDuplicatedDeclaration
+            //Stops all game objects from moving
             for (var i = 0; i < this.blocks.children.length; i++){
                 this.blocks.children[i].body.velocity.x = 0;
+
+                if (this.pipes.children[i].body != null)
+                    this.pipes.children[i].body.velocity.x = 0;
             }
             this.cloud1.body.velocity.x = 0;
             this.cloud2.body.velocity.x = 0;
@@ -109,12 +122,13 @@ var mainState = {
         //If the a key is pressed, mario starts running
 
         //Left key
-        else if(this.leftKey.isDown && this.rightKey.isUp){
+        else if(this.leftKey.isDown && this.rightKey.isUp && !game.isInPipe){
 
             //Stops all blocks from moving
-            //noinspection JSDuplicatedDeclaration
+
             for (var i = 0; i < this.blocks.children.length; i++){
                 this.blocks.children[i].body.velocity.x = 0;
+                this.pipes.children[i].body.velocity.x = 0;
             }
             this.cloud1.body.velocity.x = 0;
             this.cloud2.body.velocity.x = 0;
@@ -133,11 +147,12 @@ var mainState = {
             //Plays the moving animation if moving and on ground
             if (game.isOnGround) {
                 this.mario.animations.play('moving');
+
             }
         }
 
         //Right key
-        else if(this.rightKey.isDown && this.leftKey.isUp){
+        else if(this.rightKey.isDown && this.leftKey.isUp && !game.isInPipe){
 
             //Makes mario face to the right
             this.mario.scale.x = 1;
@@ -153,9 +168,9 @@ var mainState = {
                 this.mario.body.velocity.x = 0;
 
                 //Makes all the blocks move to the left
-                //noinspection JSDuplicatedDeclaration
                 for (var i = 0; i < this.blocks.children.length; i++){
                     this.blocks.children[i].body.velocity.x = -175;
+                    this.pipes.children[i].body.velocity.x = -175;
                 }
 
                 this.cloud1.body.velocity.x = -80;
@@ -166,6 +181,7 @@ var mainState = {
             //Plays the moving animation if moving and on ground
             if (game.isOnGround) {
                 this.mario.animations.play('moving');
+
             }
         }
 
@@ -173,25 +189,39 @@ var mainState = {
 
         this.addNewPlatforms();
 
-
+        //If a cloud goes off screen to the left, it will be moved off screen to the right
+        //It will also be given a new, random y value
         if (this.cloud1.x <= -64) {
-            this.cloud1.x += 800
+            this.cloud1.x += 800;
             this.cloud1.y = this.randomCloudY();
         }
         if (this.cloud2.x <= -64) {
-            this.cloud2.x += 800
+            this.cloud2.x += 800;
             this.cloud2.y = this.randomCloudY();
         }
         //If mario collides with the any member of the 'blocks' group, he will stop falling
         //This will also set 'isOnGround' to true
         game.physics.arcade.collide(this.mario, this.blocks, this.marioIsOnGround);
 
-        game.physics.arcade.collide(this.mario, this.pipes, this.marioIsOnGround);
+        game.physics.arcade.collide(this.mario, this.pipes, this.marioIsOnPipe);
 
     },
 
     marioIsOnGround: function() {
         game.isOnGround = true;
+    },
+
+    marioIsOnPipe: function(mario, pipe) {
+        game.isOnGround = true;
+
+        //Creates a variable to store the current pipe;
+        game.currentPipe = pipe;
+
+        //Checks if mario is situated on top of the pipe and is in the center of it
+        if (mario.y === pipe.y && mario.x >= pipe.x+25 && mario.x <= pipe.x+40)
+            game.isOnPipe = true;
+        else
+            game.isOnPipe = false;
     },
 
     jump: function() {
@@ -201,6 +231,7 @@ var mainState = {
 
             //No longer on the ground
             game.isOnGround = false;
+            game.isOnPipe = false;
 
             //Set mario's frame to jumping
             this.mario.animations.stop();
@@ -210,7 +241,6 @@ var mainState = {
 
     addPipe: function(x, y) {
 
-        console.log(this.pipes.children[0].alive);
         var pipe = this.pipes.getFirstDead();
 
         pipe.reset(x, y);
@@ -237,7 +267,6 @@ var mainState = {
         this.addBlock(x+34, y);
         this.addBlock(x+(34*2), y);
 
-        console.log(this.pipes.children[0].alive);
         //1/5 chance of spawning a pipe
        if (Math.floor(Math.random() * 5) === 0) {
             this.addPipe(x+19, y-64);
@@ -262,13 +291,17 @@ var mainState = {
         this.addPlatform(x + holeSize, yRandHeight);
     },
 
-    //If block goes off the screen, it will be killed
+    //If block or a pipe goes off the screen, it will be killed
     killBlocksOffFrame: function() {
         for (var i = 0; i < this.blocks.children.length; i++){
             if (this.blocks.children[i].x < -34){
                 this.blocks.children[i].kill();
             }
+            if (this.pipes.children[i].x < -50){
+                this.pipes.children[i].kill();
+            }
         }
+
     },
 
     //If there are three dead blocks, a new platform will be added to the game
@@ -302,8 +335,36 @@ var mainState = {
         return false;
     },
 
+    //Generates a random value to be used in cloud positioning
     randomCloudY: function() {
         return Math.floor(Math.random() * 310);
+    },
+
+    //If mario is in the correct spot, he goes down a pipe
+    goDownPipe: function() {
+        if (game.isOnPipe && !game.isInPipe) { //Can't be in the pipe
+
+            game.isInPipe = true;
+
+            //Mario moves down the pipe steadily
+            this.mario.body.velocity.y = 50;
+            this.mario.body.gravity.y = 0;
+            game.currentPipe.body.enable = false; //We need to turn physics collisions off between mario and the current pipe
+
+            //Starts a timer that will call the 'fallFromPipe' method after 1200 milliseconds
+            var timer = game.time.create(true);
+            timer.add(1200, this.fallFromPipe, this);
+            timer.start();
+        }
+    },
+
+    //Makes mario fall from the ceiling – can definitely be customized
+    fallFromPipe: function() {
+        //Resetting all the variables
+        this.mario.body.gravity.y = 2500; //Moves mario off screen
+        this.mario.y = -50;
+        game.isInPipe = false;
+        game.currentPipe.body.enable = true; //Make sure to re-enable the physics for the pipe
     },
 
     restartGame: function() {

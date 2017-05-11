@@ -230,7 +230,7 @@ var mainState = {
         var lastAddedBlock;
         for (var i = 0; i < this.blocks.length; i++){
             if (this.blocks.children[i].x > x){
-                x = this.blocks.children[i].x
+                x = this.blocks.children[i].x;
                 lastAddedBlock = this.blocks.children[i];
             }
         }

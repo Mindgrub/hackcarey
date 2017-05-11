@@ -35,7 +35,7 @@ var mainState = {
 
         //Create a new TileSprite that can hold the bricks for Mario to stand on
 
-        //Creates block for mario to jump on
+        //Creates a group of blocks for mario to jump on
         this.blocks = game.add.group(); //Creates a group
         this.blocks.enableBody = true; //Adds physics to the group
         this.blocks.createMultiple(21, 'brick'); //Creates 21 blocks
@@ -57,7 +57,6 @@ var mainState = {
         this.addPlatform(0, 500-34);
         this.addPlatform(34*3, 500-34);
 
-
         //Creates 5 starting blocks
         for (var i = 0; i < 5; i++) {
             this.addPlatformToGame();
@@ -71,9 +70,8 @@ var mainState = {
             this.restartGame();
         }
 
-        //If neither keys are pressed
+        //If neither key is pressed
         if(this.leftKey.isUp && this.rightKey.isUp || (this.leftKey.isDown && this.rightKey.isDown)) {
-
 
             //Stops all blocks from moving
             for (var i = 0; i < this.blocks.children.length; i++){
@@ -90,7 +88,7 @@ var mainState = {
         }
 
 
-        //If the a key is pressed, mario starts running
+        //If a key is pressed, mario starts running
 
         //Left key
         else if(this.leftKey.isDown && this.rightKey.isUp){

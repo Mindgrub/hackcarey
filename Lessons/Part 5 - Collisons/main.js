@@ -53,10 +53,6 @@ var mainState = {
 
         //Create a variable to see whether Mario is on the ground
         this.isOnGround = false;
-
-        //If mario collides with the any member of the 'blocks' group, he will stop falling
-        //This will also set 'isOnGround' to true
-        game.physics.arcade.collide(this.mario, this.blocks, this.marioIsOnGround);
     },
 
     update: function() {

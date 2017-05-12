@@ -64,11 +64,6 @@ var mainState = {
 
             //Stops mario from moving
             this.mario.body.velocity.x = 0;
-
-            //Sets mario's frame to the one where he stands
-            if(game.isOnGround) {
-                this.mario.frame = 0;
-            }
         }
 
         //If the a key is pressed, mario starts running
@@ -81,11 +76,6 @@ var mainState = {
 
             //Gives mario his leftward speed
             this.mario.body.velocity.x = -200;
-
-            //Plays the moving animation if moving and on ground
-            if (game.isOnGround) {
-                this.mario.animations.play('moving');
-            }
             
             //Prevents mario from going off screen to the left
             if(this.mario.x < 21){
@@ -101,11 +91,6 @@ var mainState = {
 
             //Gives mario his rightward speed
             this.mario.body.velocity.x = 200;
-
-            //Plays the moving animation if moving and on ground
-            if (game.isOnGround) {
-                this.mario.animations.play('moving');
-            }
         }
     },
 

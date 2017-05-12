@@ -52,6 +52,6 @@ var mainState = {
     }
 };
 
-// AAdd and start the 'main' state to start the game
+// Add and start the 'main' state to start the game
 game.state.add('main', mainState);
 game.state.start('main');

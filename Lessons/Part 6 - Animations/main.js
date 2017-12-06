@@ -1,4 +1,4 @@
-//Tutorial created by Jake Present, unpaid intern
+
 // Phaser docs: http://phaser.io/docs/2.6.2/index
 
 // Initialize Phaser, and create a 700x500px game
